@@ -1,0 +1,6 @@
+{
+  "status": "PASS",
+  "accuracy_at_least_80_percent": true,
+  "one_diagnosis_per_event": true,
+  "all_scores_finite": true
+}

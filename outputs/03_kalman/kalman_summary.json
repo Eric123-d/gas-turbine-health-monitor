@@ -1,0 +1,59 @@
+{
+  "matrix_training_source": "middle 30% strict assumed-health data plus synthetic faults",
+  "A": [
+    [
+      1.0003015117364908,
+      0.9730581057123889
+    ],
+    [
+      -0.00012061439879979227,
+      0.9620082448344781
+    ]
+  ],
+  "B_shape": [
+    2,
+    8
+  ],
+  "C": [
+    [
+      1.000436823775975,
+      1.908168436216002
+    ],
+    [
+      2.588103544442742e-07,
+      0.9999174736552904
+    ]
+  ],
+  "transition_bias": [
+    0.000438421925044318,
+    0.000815070506764479
+  ],
+  "measurement_bias": [
+    0.002080023026591241,
+    -5.3842554457725015e-08
+  ],
+  "A_spectral_radius": 0.9969418588102533,
+  "forecast_horizon_max_seconds": 600,
+  "drift_definition": "median of the latest five one-second changes of |residual|",
+  "tested_fault_durations_seconds": [
+    10,
+    20,
+    30,
+    60,
+    100,
+    180,
+    300,
+    450,
+    600
+  ],
+  "events_detected": 9,
+  "events_warned_before_or_at_cross": 9,
+  "mean_lead_time_seconds": 92.66666666666667,
+  "healthy_check_derived_one_hz_seconds": 21841,
+  "healthy_confirmed_alarm_event_count": 0,
+  "mean_filter_and_600s_forecast_latency_us": 3097.7032211975584,
+  "p95_filter_and_600s_forecast_latency_us": 3947.1299999999997,
+  "warning_activation_MW": 3.4409933013010745,
+  "alarm_rule": "current residual above mean+5 SD + 600 s crossing forecast + latest-five-change median drift + 60 s residual rise + two confirmations",
+  "one_hz_is_interpolated_not_measured": true
+}

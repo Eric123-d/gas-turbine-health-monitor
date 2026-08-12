@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "trained_on_exact_first_40_percent": true,
+  "test_r2_at_least_0_80": true,
+  "absolute_residual_never_negative": true,
+  "one_sided_boundary_positive": true
+}

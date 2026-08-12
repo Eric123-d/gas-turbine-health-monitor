@@ -1,0 +1,8 @@
+{
+  "events": 9,
+  "correct_against_synthetic_label": 9,
+  "synthetic_root_cause_accuracy": 1.0,
+  "score_definition": "|sensor at alarm - median of ten seconds before rise| / training SD",
+  "reference_window": "ten seconds immediately before the known synthetic rise; a deployed version needs an onset detector",
+  "field_fault_labels_used": false
+}

@@ -1,0 +1,10 @@
+event_id,fault_duration_s,diagnosed_variable,operator_recommendation,human_approval_required,direct_controller_command,counterfactual_final_absolute_residual_MW,returned_below_one_sided_boundary
+1,10,CPD,"reduce load, verify IGV position and inspect compressor delivery",True,False,0.9783814021411104,True
+2,20,AT,check inlet-temperature sensing/cooling and derate if necessary,True,False,0.7603548755076588,True
+3,30,DF,hold load and verify grid-frequency / generator measurements,True,False,3.1353468073106256,True
+4,60,AP,verify inlet pressure sensing and inlet restriction,True,False,1.7889928971681996,True
+5,100,GP,stabilize gas supply and inspect regulator or fuel-gas valve,True,False,1.612247900140801,True
+6,180,CPD,"reduce load, verify IGV position and inspect compressor delivery",True,False,1.4258760648130533,True
+7,300,AT,check inlet-temperature sensing/cooling and derate if necessary,True,False,1.074244004195549,True
+8,450,DF,hold load and verify grid-frequency / generator measurements,True,False,0.4646148382942954,True
+9,600,AP,verify inlet pressure sensing and inlet restriction,True,False,2.1366441001033394,True

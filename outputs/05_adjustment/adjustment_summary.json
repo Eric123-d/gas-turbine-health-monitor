@@ -1,0 +1,7 @@
+{
+  "events": 9,
+  "events_returned_below_boundary": 9,
+  "recovery_horizon_seconds": 600,
+  "human_approval_required": true,
+  "direct_controller_commands_issued": false
+}

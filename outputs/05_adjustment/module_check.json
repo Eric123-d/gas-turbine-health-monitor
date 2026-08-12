@@ -1,0 +1,6 @@
+{
+  "status": "PASS",
+  "all_events_return_below_boundary": true,
+  "all_actions_require_human_approval": true,
+  "no_direct_controller_commands": true
+}
