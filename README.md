@@ -1,101 +1,24 @@
-# Gas Turbine Health Monitor
+# Simplified Gas Turbine Health Monitor
 
-An interview-ready, five-module example of real-time condition monitoring for a
-utility-scale GE Frame 9E industrial gas turbine. The implementation is kept
-deliberately direct: small functions, ordinary loops, explicit equations, and a
-check file from every module.
+这是一个面试用的简化燃气轮机实时监测项目。仓库只有 10 个文件，不保存训练过程、中间矩阵或重复结果。
 
-## What the pipeline does
+数据来自公开 GE Frame 9E 燃气轮机运行数据。公开文件没有故障标签，因此代码先删除非数值、物理范围外、重复、孤立毛刺和大残差异常行，并将剩余数据称为“严格筛选的假定健康数据”。原始采样间隔约 240 秒，代码不再插值成虚假的 1 Hz 数据。
 
-| Module | File | Responsibility | Evidence output |
-|---|---|---|---|
-| 1 | `module1_data.py` | Screen implausible rows, duplicates, isolated spikes and large model-inconsistent outliers; then split in time order 40/30/30 | cleaning audit, split table, PASS check |
-| 2 | `module2_baseline.py` | Fit ElasticNet on only the first 40%; predict expected electrical power and calculate nonnegative residual | R²/MAE/RMSE, coefficients, one-sided boundary, plots |
-| 3 | `module3_kalman.py` | Inject gradual faults only while learning the middle 30%; train A/B/C and both bias vectors; update state/P online and forecast no farther than 600 s | matrices, validation, 10–600 s tests, latency, alarm plots |
-| 4 | `module4_root_cause.py` | Rank absolute standardized sensor changes at the first confirmed alarm | per-event ranking, synthetic-label comparison, plots |
-| 5 | `module5_adjustment.py` | Propose human-supervised actions and simulate return to the pre-fault reference | recommendations, recovery traces, consolidated HTML report |
+五个模块：
 
-The main signal is
+1. `module1_data.py`：清洗唯一的 `data.csv`，再按时间顺序划分 40%/30%/30%。
+2. `module2_baseline.py`：只用前 40% 训练 ElasticNet，计算非负绝对残差和单边 10-SD 边界。
+3. `module3_kalman.py`：在中间 30% 上注入多种渐进故障，训练 A/B/C、偏置、Q/R；每个新采样点更新状态和 P，并直接外推最多 600 个采样步。
+4. `module4_root_cause.py`：在第一个报警点比较标准化传感器变化，定位根因。
+5. `module5_adjustment.py`：给出人工监督的回归基准验证，不发送控制命令。
 
-```text
-h(t) = | measured EP(t) - ElasticNet expected EP(t) |
-boundary = mean(h on the first 40%) + 10 × sample SD(h on the first 40%)
-```
-
-There is one upper boundary. The residual is an absolute error and is never
-negative; this project does not use a ± boundary.
-
-The state-space model is learned rather than typed in by hand:
-
-```text
-x(t) = A x(t-1) + B u(t) + transition_bias
-z(t) = C x(t)     + measurement_bias
-```
-
-`x` contains absolute residual level and drift. The drift definition is exactly
-the median of the latest five one-second changes of `h`. During online use,
-A/B/C, both bias vectors, Q and R stay fixed; only state `x` and covariance `P`
-are carried forward. Each forecast is a plain loop from 1 to at most 600 seconds.
-
-A warning becomes eligible above `mean + 5 SD`, then is accepted after the
-model predicts the 10-SD boundary will be crossed within 600 seconds and the
-measured residual shows a sustained rise against its recent 60-second reference.
-Two consecutive confirmations suppress isolated operating-condition changes.
-
-## Data honesty
-
-The included public SMART-GTPP CSV has 7,893 four-minute observations from a GE
-Frame 9E plant. It has no health labels, fault labels, absolute timestamps,
-maintenance records, or unit identifiers. Therefore:
-
-- the cleaned source is called **strictly screened assumed-health data**, not
-  label-confirmed healthy data;
-- Module 1 removes implausible values, duplicates, isolated five-point Hampel
-  spikes, and rows outside a six-MAD provisional residual screen before any
-  40/30/30 split;
-- the source interval is 240 seconds. One-second timelines are linearly
-  interpolated and are clearly identified as simulated 1 Hz points, not measured
-  1 Hz sensor readings;
-- injected degradation is synthetic. It has a visible upward trend, limited
-  correlated ripple and sparse steep bursts, but no vertical step;
-- synthetic detection/root-cause scores are engineering tests, not field-fault
-  performance claims;
-- the 10-SD boundary is statistical, not an OEM protection or trip limit;
-- adjustment is counterfactual and requires a human operator. The code sends no
-  controller command.
-
-See `data/README.md` for DOI, paper and license provenance.
-
-## Reproduce
+运行：
 
 ```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ./run_all.ps1
 ```
 
-Every module raises an error if its mandatory checks fail. After a successful
-run, open `outputs/PROJECT_REPORT.html`. It packages the result plots, fitted
-matrices, event timing, warning lead time, latency and module checks into one
-self-contained file suitable for review or interview discussion.
+验证结果会直接打印在终端。当前 ElasticNet 训练 R² 约 0.985、后 30% R² 约 0.855。故障测试使用 10、30、100、300、600 个采样步；燃机 600 步等于 144,000 秒。报警要求残差连续两个采样点上升并且 Kalman 外推会在 600 步内越界，因此红点应在故障开始后约 2–5 个采样点出现。唯一保留的结果是 `residual_alarm.png`。
 
-## Current baseline result
-
-The committed deterministic run fits ElasticNet on 2,692 rows (the first 40% of
-the cleaned data). It reaches R² = 0.9853 on that training block and R² = 0.8548
-on the untouched final 30%, with 2.005 MW test MAE. The one-sided boundary is
-6.266 MW. These values are regenerated by `run_all.ps1`.
-
-Why is the held-out R² not 0.999? This is a plain linear ElasticNet evaluated on
-a later, untouched operating block; it is not a shuffled split and it does not
-use a nonlinear learner. The companion gas-turbine study reports R² = 0.9125 for
-its best XGBoost model. The gap between 0.9853 training R² and 0.8548 later-block
-R² is therefore reported as operating-distribution shift/model bias, not hidden
-by mixing later rows into training. NASA C-MAPSS scores are not directly
-comparable because the asset, target, sampling process and split protocol differ.
-
-## License
-
-Project code is MIT licensed. The SMART-GTPP data are redistributed under CC BY
-4.0; attribution is in `data/README.md`.
+边界和人工故障仅用于简化演示，不是 OEM 保护定值或现场故障性能声明。

@@ -1,4 +1,0 @@
-split,rows,percent_of_cleaned,first_clean_row,last_clean_row
-baseline_train,2692,39.99405734660526,0,2691
-matrix_train,2019,29.995543009953945,2692,4710
-test,2020,30.010399643440795,4711,6730
