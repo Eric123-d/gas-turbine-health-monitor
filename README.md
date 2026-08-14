@@ -1,24 +1,24 @@
 # Simplified Gas Turbine Health Monitor
 
-这是一个面试用的简化燃气轮机实时监测项目。仓库只有 10 个文件，不保存训练过程、中间矩阵或重复结果。
+This is a compact interview project that demonstrates early fault warning for a gas turbine. The repository contains only ten files and does not save training traces, intermediate matrices, or duplicate reports.
 
-数据来自公开 GE Frame 9E 燃气轮机运行数据。公开文件没有故障标签，因此代码先删除非数值、物理范围外、重复、孤立毛刺和大残差异常行，并将剩余数据称为“严格筛选的假定健康数据”。原始采样间隔约 240 秒，代码不再插值成虚假的 1 Hz 数据。
+The single `data.csv` file is based on the public GE Frame 9E operating dataset. Because the public data has no authoritative fault labels, Module 1 removes non-numeric values, physically impossible values, duplicate rows, isolated spikes, and large-residual outliers. The remaining rows are treated as a strictly screened healthy reference set. The original sampling interval is about 240 seconds; the code does not create artificial 1 Hz samples.
 
-五个模块：
+## Five modules
 
-1. `module1_data.py`：清洗唯一的 `data.csv`，再按时间顺序划分 40%/30%/30%。
-2. `module2_baseline.py`：只用前 40% 训练 ElasticNet，计算非负绝对残差和单边 10-SD 边界。
-3. `module3_kalman.py`：在中间 30% 上注入多种渐进故障，训练 A/B/C、偏置、Q/R；每个新采样点更新状态和 P，并直接外推最多 600 个采样步。
-4. `module4_root_cause.py`：在第一个报警点比较标准化传感器变化，定位根因。
-5. `module5_adjustment.py`：给出人工监督的回归基准验证，不发送控制命令。
+1. `module1_data.py` cleans the data and makes a chronological 40%/30%/30% split.
+2. `module2_baseline.py` trains an Elastic Net model on the first 40%. It calculates the non-negative absolute residual and a one-sided 10-SD safety boundary.
+3. `module3_kalman.py` injects several gradual fault patterns into the middle 30% and learns the A, B, C, bias, Q, and R terms. At each new sample, the adaptive Kalman filter updates only the state and P, then forecasts no more than 600 sampling steps.
+4. `module4_root_cause.py` compares standardized sensor changes at the first alarm and identifies the likely source.
+5. `module5_adjustment.py` verifies a supervised return toward the pre-fault reference state. It never sends a real control command.
 
-运行：
+## Run
 
 ```powershell
 pip install -r requirements.txt
 ./run_all.ps1
 ```
 
-验证结果会直接打印在终端。当前 ElasticNet 训练 R² 约 0.985、后 30% R² 约 0.855。故障测试使用 10、30、100、300、600 个采样步；燃机 600 步等于 144,000 秒。报警要求残差连续两个采样点上升并且 Kalman 外推会在 600 步内越界，因此红点应在故障开始后约 2–5 个采样点出现。唯一保留的结果是 `residual_alarm.png`。
+Each module prints a short validation result. The current Elastic Net scores are approximately 0.985 training R² and 0.855 final-test R². Fault tests cover 10, 30, 100, 300, and 600 sampling steps. For this dataset, 600 steps equal about 144,000 seconds. An alarm requires two consecutive residual increases and a Kalman forecast that crosses the boundary within 600 steps; the red alarm point normally appears 2–3 samples after fault onset. The only saved result is `residual_alarm.png`.
 
-边界和人工故障仅用于简化演示，不是 OEM 保护定值或现场故障性能声明。
+The synthetic faults, statistical boundary, and adjustment logic are simplified demonstrations, not OEM protection limits or field-performance claims.
