@@ -2,7 +2,9 @@
 
 import numpy as np
 
-from module1_data import FEATURES
+from module1_data import FEATURES, load_and_split
+from module2_baseline import train_baseline
+from module3_kalman import test_and_plot, train_kalman
 
 
 def diagnose(events, baseline):
@@ -20,3 +22,16 @@ def diagnose(events, baseline):
         raise AssertionError("root-cause validation failed")
     print(f"Module 4 PASS | synthetic root cause={correct}/{len(results)}")
     return results
+
+
+def main():
+    _, baseline_train, matrix_train, test = load_and_split()
+    baseline = train_baseline(baseline_train, test)
+    kalman = train_kalman(matrix_train, baseline)
+    events = test_and_plot(test, baseline, kalman)
+    diagnose(events, baseline)
+    print("ALL FOUR MODULES PASS | only residual_alarm.png is written")
+
+
+if __name__ == "__main__":
+    main()
